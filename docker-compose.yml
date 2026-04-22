@@ -1,0 +1,123 @@
+services:
+  # Knowledge & Data (Vector DB + User Data)
+  postgres:
+    image: ankane/pgvector:latest
+    container_name: agentic-db
+    environment:
+      POSTGRES_DB: agent_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d agent_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # State Store (Session/Memory + Semantic Cache)
+  redis:
+    image: redis/redis-stack-server:latest
+    container_name: agentic-state
+    ports:
+      - "6379:6379"
+      - "8001:8001" # RedisInsight UI
+    volumes:
+      - ./data/redis:/data
+
+  # LLM Layer (Local Llama 3)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: agentic-llm
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./data/ollama:/root/.ollama
+    # Note: If you have a GPU, add deploy: resources: reservations: devices: - driver: nvidia ...
+
+  # Orchestration Layer (n8n)
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: agentic-orchestrator
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - WEBHOOK_URL=http://localhost:5678/
+    volumes:
+      - ./data/n8n:/home/node/.n8n
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Knowledge Ingestion Service (Runs once to sync data)
+  knowledge-ingest:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    container_name: agentic-ingest
+    environment:
+      - DATABASE_URL=postgresql://admin:password@postgres:5432/agent_db
+      - POSTGRES_HOST=postgres
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=agent_db
+    volumes:
+      - ./agent:/app
+      - ./ingest:/app/ingest
+    command: python /app/ingest/ingest.py
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Agentic Core (Python/LangGraph)
+  agent-core:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    container_name: agentic-core
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://admin:password@postgres:5432/agent_db
+      - REDIS_URL=redis://redis:6379/0
+      - OLLAMA_HOST=http://ollama:11434
+      - OLLAMA_MODEL=llama3.2:1b
+      - N8N_WEBHOOK_URL=http://n8n:5678/webhook/agent
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - ./agent:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      ollama:
+        condition: service_started
+      knowledge-ingest:
+        condition: service_completed_successfully
+
+  # Front-End (Streamlit)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: agentic-frontend
+    ports:
+      - "8501:8501"
+    environment:
+      - AGENT_API_URL=http://agent-core:8000
+    volumes:
+      - ./frontend:/app
+    depends_on:
+      - agent-core
+
+networks:
+  default:
+    name: agentic-network
