@@ -1,4 +1,4 @@
-# Agentic AI Infrastructure: Automated Intelligence & Orchestration
+# Agentic AI Architecture
 
 This project focuses on building a sophisticated Agentic AI system that goes beyond simple chat. It combines local LLM reasoning, stateful workflow management, and real-world tool integration to create an autonomous agent capable of solving complex problems. The goal is to demonstrate how modern software engineering can leverage AI to automate business processes, manage knowledge through RAG (Retrieval-Augmented Generation), and interact seamlessly with external platforms like Email and WhatsApp.
 
@@ -25,15 +25,15 @@ This project focuses on building a sophisticated Agentic AI system that goes bey
         - [6.5.1 Embedding Generation & Storage](#651-embedding-generation--storage)
     - [6.6 LangGraph Agentic Logic](#66-langgraph-agentic-logic)
         - [6.6.1 Workflow & Tool Integration](#661-workflow--tool-integration)
-    - [6.7 Final POC & Evidence](#67-final-poc--evidence)
+    - [6.7 Final POC & Evidence](#67-final-poc--evidence). [Step-by-Step Installation & POC Guide]
         - [6.7.1 End-to-End Functional Testing](#671-end-to-end-functional-testing)
 7. [Video Demo](#7-video-demo)
 
----
+
 
 ![Demo Screen](design/demo.png)
 
----
+
 
 ## 1. What is Agentic AI?
 Agentic AI refers to AI systems that can act as "agents." Unlike traditional AI that only answers questions, Agentic AI can use tools, make decisions, and complete complex workflows autonomously to achieve a specific goal. It is the evolution of AI from a passive assistant to an active worker.
@@ -80,7 +80,7 @@ The rise of Agentic AI creates new specialized roles that bridge the gap between
 2. **Proactive Monitoring**: An AI monitor analyzes server logs. If it detects a security threat, it summarizes the issue and automatically sends an urgent WhatsApp alert to the IT team with a suggested fix.
 3. **Autonomous Lead Qualification**: An AI agent monitors incoming emails, checks the sender's company against a CRM database, summarizes their request, and automatically schedules a meeting in the salesperson's calendar if the lead is high-priority.
 
----
+
 
 ## 6. Step-by-Step Installation & POC Guide
 This section provides a detailed walkthrough. Each step includes an instruction and a link to the screenshot.
@@ -357,7 +357,7 @@ Ask the agent: "Forward this alert to my WhatsApp".
 Screenshot of the WhatsApp message received on the physical phone.
 ![Step 60](ss/57-langraph-chatbot-forward-info-to-whatapp-evidance.png)
 
----
+
 
 ## 7. Video Demo
 Watch the full demonstration of the system in action, including live interactions and automated triggers.
